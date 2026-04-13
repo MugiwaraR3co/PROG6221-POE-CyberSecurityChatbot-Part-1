@@ -3,7 +3,7 @@
 ## Description
 This project is a C# console-based Cybersecurity Awareness Chatbot developed to educate users about common cybersecurity threats and best practices.
 
-## Features
+##  Features
 - Interactive chatbot system
 - Password strength checker
 - Threat detection (e.g., suspicious links, SQL injection)
