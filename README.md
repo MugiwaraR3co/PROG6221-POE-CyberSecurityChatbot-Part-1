@@ -32,4 +32,4 @@ This project is a C# console-based Cybersecurity Awareness Chatbot developed to 
 - Logs: Stores user interaction logs
 
 ## Author
-[Reccardo Kamva Horner]
+Reccardo Kamva Horner
