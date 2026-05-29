@@ -1,4 +1,5 @@
 ﻿using CyberSecurityChatbot.Services;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Media;
 using System.Windows;
@@ -6,8 +7,10 @@ using System.Windows.Input;
 
 csharp CyberSecurityChatbot.UI\MainWindow.xaml.cs
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Media;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using CyberSecurityChatbot.Services;
@@ -21,6 +24,9 @@ namespace CyberSecurityChatbot.UI
         private int _interactionCount = 0;
         private readonly string _logFolder = "Logs";
 
+        // Observable collection bound to the ListBox for modern UI
+        public ObservableCollection<MessageItem> Messages { get; } = new();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -28,8 +34,10 @@ namespace CyberSecurityChatbot.UI
             _bot = new Chatbot();
             _tools = new SecurityTools();
 
+            DataContext = this;
+
             TryPlayGreeting();
-            AddSystemMessage("Hello! Type a question or check a password. I remember interests and can detect simple sentiment.");
+            AddSystemMessage("Hello! Type a question or check a password. I remember interests and detect simple sentiment.");
         }
 
         private void TryPlayGreeting()
@@ -49,49 +57,86 @@ namespace CyberSecurityChatbot.UI
             }
         }
 
-        private void SendButton_Click(object sender, RoutedEventArgs e)
+        private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            SendInput();
+            await SendInputAsync();
         }
 
-        // New: handle Enter key to send
-        private void InputBox_KeyDown(object sender, KeyEventArgs e)
+        private async void InputBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
-                SendInput();
                 e.Handled = true;
+                await SendInputAsync();
             }
         }
 
-        private void SendInput()
+        private async Task SendInputAsync()
         {
             var input = InputBox.Text?.Trim();
             if (string.IsNullOrEmpty(input))
                 return;
 
-            AddUserMessage(input);
+            AddMessage("You", input);
             _interactionCount++;
+            Log("User", input);
+            InputBox.Clear();
 
             if (input.Equals("exit", StringComparison.OrdinalIgnoreCase))
             {
                 AddSystemMessage($"You asked {_interactionCount} questions. Stay safe online!");
-                InputBox.Clear();
                 return;
             }
 
+            // Show a typing indicator
+            var typing = new MessageItem { Sender = "Bot", Text = "Bot is typing...", Timestamp = DateTime.Now, IsTyping = true };
+            Messages.Add(typing);
+            ScrollToEnd();
+
+            // Small delay for realism
+            await Task.Delay(600);
+
+            // Get response and replace typing indicator with actual message
             string response = _bot.GetResponse(input);
-            AddBotMessage(response);
-            Log("User", input);
-            InputBox.Clear();
+
+            // replace typing entry
+            var index = Messages.IndexOf(typing);
+            if (index >= 0)
+            {
+                Messages[index] = new MessageItem { Sender = "Bot", Text = response, Timestamp = DateTime.Now };
+            }
+            else
+            {
+                AddMessage("Bot", response);
+            }
+
+            ScrollToEnd();
         }
 
         private void PhishSimButton_Click(object sender, RoutedEventArgs e)
         {
-            AddUserMessage("simulate phishing");
-            string resp = _bot.GetResponse("simulate phishing");
-            AddBotMessage(resp);
+            _ = SimulatePhishingAsync();
+        }
+
+        private async Task SimulatePhishingAsync()
+        {
+            AddMessage("You", "simulate phishing");
             Log("User", "simulate phishing");
+
+            var typing = new MessageItem { Sender = "Bot", Text = "Running phishing simulation...", Timestamp = DateTime.Now, IsTyping = true };
+            Messages.Add(typing);
+            ScrollToEnd();
+
+            await Task.Delay(700);
+
+            string resp = _bot.GetResponse("simulate phishing");
+            var idx = Messages.IndexOf(typing);
+            if (idx >= 0)
+                Messages[idx] = new MessageItem { Sender = "Bot", Text = resp, Timestamp = DateTime.Now };
+            else
+                AddMessage("Bot", resp);
+
+            ScrollToEnd();
         }
 
         private void CheckPasswordButton_Click(object sender, RoutedEventArgs e)
@@ -103,26 +148,30 @@ namespace CyberSecurityChatbot.UI
             Log("User", "Checked password");
         }
 
-        // New: clear chat
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
-            ChatList.Items.Clear();
+            Messages.Clear();
             AddSystemMessage("Chat cleared.");
-        }
-
-        private void AddUserMessage(string text)
-        {
-            ChatList.Items.Add($"You: {text}");
-        }
-
-        private void AddBotMessage(string text)
-        {
-            ChatList.Items.Add($"Bot: {text}");
         }
 
         private void AddSystemMessage(string text)
         {
-            ChatList.Items.Add($"* {text}");
+            Messages.Add(new MessageItem { Sender = "System", Text = text, Timestamp = DateTime.Now });
+            ScrollToEnd();
+        }
+
+        private void AddMessage(string sender, string text)
+        {
+            Messages.Add(new MessageItem { Sender = sender, Text = text, Timestamp = DateTime.Now });
+            ScrollToEnd();
+        }
+
+        private void ScrollToEnd()
+        {
+            if (ChatList.Items.Count > 0)
+            {
+                ChatList.ScrollIntoView(ChatList.Items[ChatList.Items.Count - 1]);
+            }
         }
 
         private void Log(string user, string action)
@@ -138,5 +187,14 @@ namespace CyberSecurityChatbot.UI
                 // keep UI stable if logging fails
             }
         }
+    }
+
+    // Simple message model used by the UI
+    public class MessageItem
+    {
+        public string Sender { get; set; } = "Bot"; // "You", "Bot", or "System"
+        public string Text { get; set; } = "";
+        public DateTime Timestamp { get; set; } = DateTime.Now;
+        public bool IsTyping { get; set; }
     }
 }
