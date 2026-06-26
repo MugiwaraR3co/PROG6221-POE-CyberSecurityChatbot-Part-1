@@ -1,0 +1,14 @@
+C:\Users\Student\OneDrive - ADvTECH Ltd\Documents\CyberSecurityChatbot\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\CyberSecurityChatbot.UI..csproj.AssemblyReference.cache
+C:\Users\Student\OneDrive - ADvTECH Ltd\Documents\CyberSecurityChatbot\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\MainWindow.baml
+C:\Users\Student\OneDrive - ADvTECH Ltd\Documents\CyberSecurityChatbot\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\MainWindow.g.cs
+C:\Users\Student\OneDrive - ADvTECH Ltd\Documents\CyberSecurityChatbot\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\App.g.cs
+C:\Users\Student\OneDrive - ADvTECH Ltd\Documents\CyberSecurityChatbot\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\CyberSecurityChatbot.UI._MarkupCompile.cache
+C:\Users\Student\OneDrive - ADvTECH Ltd\Documents\CyberSecurityChatbot\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\CyberSecurityChatbot.UI..g.resources
+C:\Users\Student\OneDrive - ADvTECH Ltd\Documents\CyberSecurityChatbot\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\CyberSecurityChatbot.UI..GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Student\OneDrive - ADvTECH Ltd\Documents\CyberSecurityChatbot\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\CyberSecurityChatbot.UI..AssemblyInfoInputs.cache
+C:\Users\Student\OneDrive - ADvTECH Ltd\Documents\CyberSecurityChatbot\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\CyberSecurityChatbot.UI..AssemblyInfo.cs
+C:\Users\Student\OneDrive - ADvTECH Ltd\Documents\CyberSecurityChatbot\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\CyberSecurityChatbot.UI..csproj.CoreCompileInputs.cache
+C:\Users\Student\OneDrive - ADvTECH Ltd\Documents\CyberSecurityChatbot\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\CyberSecurityChatbot.UI..sourcelink.json
+C:\Users\Student\Downloads\CyberSecurityChatbot PART 2 (1)\CyberSecurityChatbot PART 2\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\CyberSecurityChatbot.UI..csproj.AssemblyReference.cache
+C:\Users\Student\Downloads\CyberSecurityChatbot PART 2 (1)\CyberSecurityChatbot PART 2\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\App.g.cs
+C:\Users\Student\Downloads\CyberSecurityChatbot PART 2 (1)\CyberSecurityChatbot PART 2\CyberSecurityChatbot\CyberSecurityChatbot.UI\obj\Debug\net8.0-windows\CyberSecurityChatbot.UI._MarkupCompile.cache

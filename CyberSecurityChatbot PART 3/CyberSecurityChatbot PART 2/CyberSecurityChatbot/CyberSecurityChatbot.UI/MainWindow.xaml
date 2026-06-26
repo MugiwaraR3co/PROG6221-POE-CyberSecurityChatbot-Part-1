@@ -1,0 +1,209 @@
+﻿<Window x:Class="CyberSecurityChatbot.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2000/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2000/xaml"
+        Title="Cybersecurity Operations Management Workspace" Height="750" Width="1150"
+        Background="#FF0F1113" FontFamily="Segoe UI">
+    <Window.Resources>
+        <SolidColorBrush x:Key="PanelBrush" Color="#FF1E1E2E"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#FF4CAF50"/>
+
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="MinWidth" Value="90"/>
+            <Setter Property="Background" Value="#FF2D3139"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <DataTemplate x:Key="MessageTemplate">
+            <Grid Margin="6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0" VerticalAlignment="Top" Width="36" Height="36">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="TemplateSender" Value="Bot">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Ellipse Fill="#FF2E8B57" />
+                    <TextBlock Text="🛡️" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Grid>
+
+                <Border Grid.Column="2" Background="#FF23232B" CornerRadius="8" Padding="10" HorizontalAlignment="Left" MaxWidth="500">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="TemplateSender" Value="Bot">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="TemplateSender" Value="System">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel>
+                        <TextBlock Text="{Binding Text}" Foreground="LightGray" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding Timestamp}" FontSize="10" Foreground="#FF8C8C8C" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Background="{StaticResource AccentBrush}" CornerRadius="8" Padding="10" HorizontalAlignment="Right" MaxWidth="500">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="TemplateSender" Value="You">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel>
+                        <TextBlock Text="{Binding Text}" Foreground="Black" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding Timestamp}" FontSize="10" Foreground="#FF003300" Margin="0,6,0,0" HorizontalAlignment="Right"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </DataTemplate>
+
+        <Style TargetType="ListBoxItem" x:Key="ChatItemStyle">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <ContentPresenter/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="12">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="480"/>
+            <ColumnDefinition Width="12"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <TabControl Name="WorkspaceTabs" Grid.Column="0" Background="#FF181A1F" BorderThickness="1" BorderBrush="#FF2D3139">
+
+            <TabItem Name="TaskTab" Header="Task Assistant Grid">
+                <Grid Padding="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                        <TextBlock Text="Register Asset Protection Task" Foreground="White" FontWeight="Bold" FontSize="14" Margin="0,0,0,8"/>
+                        <TextBlock Text="Task Designation Name Title:" Foreground="DarkGray" FontSize="11"/>
+                        <TextBox Name="TxtTaskTitle" Height="26" Background="#FF252831" Foreground="White" BorderBrush="#FF3D4251" Margin="0,2,0,6" VerticalContentAlignment="Center"/>
+
+                        <TextBlock Text="Technical Context Description:" Foreground="DarkGray" FontSize="11"/>
+                        <TextBox Name="TxtTaskDescription" Height="45" TextWrapping="Wrap" AcceptsReturn="True" Background="#FF252831" Foreground="White" BorderBrush="#FF3D4251" Margin="0,2,0,6"/>
+
+                        <TextBlock Text="Alert Execution Schedule Reminder:" Foreground="DarkGray" FontSize="11"/>
+                        <TextBox Name="TxtTaskReminder" Height="26" Background="#FF252831" Foreground="White" BorderBrush="#FF3D4251" Margin="0,2,0,8" VerticalContentAlignment="Center"/>
+
+                        <Button Name="BtnAddTask" Content="Save Task Record" Click="BtnAddTask_Click" Background="{StaticResource AccentBrush}" Foreground="Black" FontWeight="Bold" HorizontalAlignment="Right" Margin="0"/>
+                    </StackPanel>
+
+                    <DataGrid Name="DgTasks" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" Background="#FF111216" RowBackground="#FF1A1C23" AlternatingRowBackground="#FF22252E" BorderBrush="#FF2D3139" Foreground="White">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="40" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Task Title" Binding="{Binding Title}" Width="120" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="160" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Reminder" Binding="{Binding Reminder}" Width="100" IsReadOnly="True"/>
+                            <DataGridCheckBoxColumn Header="Done" Binding="{Binding IsComplete}" Width="50" IsReadOnly="True"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                        <Button Name="BtnMarkComplete" Content="Mark Complete" Click="BtnMarkComplete_Click" Background="#FF2D74DA"/>
+                        <Button Name="BtnDeleteTask" Content="Purge Item" Click="BtnDeleteTask_Click" Background="#FFC0392B"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <TabItem Name="QuizTab" Header="Compliance Quiz Game">
+                <Grid Padding="12" Background="#FF111216">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Cyber Security Literacy Verification Quiz" Foreground="White" FontSize="14" FontWeight="Bold" Margin="0,0,0,4"/>
+                    <TextBlock Name="QuizScoreText" Grid.Row="1" Text="Score Metric: 0 / 0 Registered" Foreground="#FF4CAF50" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+                    <Border Grid.Row="2" Background="#FF1A1C23" CornerRadius="4" Padding="12" BorderThickness="1" BorderBrush="#FF2D3139" VerticalAlignment="Top">
+                        <StackPanel>
+                            <TextBlock Name="QuestionText" Text="Initialize assessment process loops to load parameters." Foreground="White" FontSize="13" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+                            <StackPanel Name="OptionsPanel">
+                                <RadioButton Name="OptA" Foreground="LightGray" Margin="0,4"/>
+                                <RadioButton Name="OptB" Foreground="LightGray" Margin="0,4"/>
+                                <RadioButton Name="OptC" Foreground="LightGray" Margin="0,4"/>
+                                <RadioButton Name="OptD" Foreground="LightGray" Margin="0,4"/>
+                            </StackPanel>
+
+                            <TextBlock Name="ExplanationText" Text="Feedback metrics compiled here." Foreground="#FFD4AC0D" TextWrapping="Wrap" Margin="0,12,0,0" Visibility="Collapsed" FontStyle="Italic"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                        <Button Name="ResetQuizBtn" Content="Reset Game" Click="ResetQuizBtn_Click" Visibility="Collapsed"/>
+                        <Button Name="SubmitAnswerBtn" Content="Submit Response" Click="SubmitAnswerBtn_Click" Background="{StaticResource AccentBrush}" Foreground="Black" FontWeight="Bold"/>
+                        <Button Name="NextQuestionBtn" Content="Next Strategy" Click="NextQuestionBtn_Click" Background="#FF2D74DA" Visibility="Collapsed"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#FF0B0B0D" CornerRadius="6" Padding="10" BorderThickness="1" BorderBrush="#FF181A1F">
+                <ListBox Name="ChatList" ItemTemplate="{StaticResource MessageTemplate}" ItemContainerStyle="{StaticResource ChatItemStyle}" Background="Transparent" BorderThickness="0" />
+            </Border>
+
+            <Grid Grid.Row="1" Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox Name="InputBox" Grid.Column="0" Height="36" Background="#FF1E222B" Foreground="White" BorderBrush="#FF2D3139" CaretBrush="White" FontSize="13" VerticalContentAlignment="Center" Padding="6,0" KeyDown="InputBox_KeyDown" />
+                <Button Name="SendButton" Grid.Column="1" Content="Dispatch" Click="SendButton_Click" Background="{StaticResource AccentBrush}" Foreground="Black" FontWeight="Bold" Height="36" VerticalAlignment="Center" Margin="6,0,0,0"/>
+            </Grid>
+
+            <Border Grid.Row="2" Background="#FF14161D" CornerRadius="4" Margin="0,10,0,0" Padding="10" BorderThickness="1" BorderBrush="#FF252831">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Password Shield Analysis Engine:" Foreground="Gray" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="11" FontWeight="Bold"/>
+                    <PasswordBox Name="PasswordBox" Width="220" Height="28" Background="#FF1C1E24" Foreground="White" BorderBrush="#FF2D3139" CaretBrush="White" VerticalContentAlignment="Center"/>
+                    <Button Name="CheckPasswordButton" Content="Verify Entropy" Click="CheckPasswordButton_Click" Height="28" Margin="6,0,0,0"/>
+                    <TextBlock Name="StatusText" Foreground="LightGray" Margin="12,0,0,0" VerticalAlignment="Center" FontWeight="Bold"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
