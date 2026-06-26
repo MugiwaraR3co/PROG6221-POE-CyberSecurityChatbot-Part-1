@@ -1,18 +1,9 @@
-﻿using CyberSecurityChatbot.Services;
+﻿using System;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Media;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
-
-csharp CyberSecurityChatbot.UI\MainWindow.xaml.cs
-using System;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Media;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
+using CyberSecurityChatbot.Models;
 using CyberSecurityChatbot.Services;
 
 namespace CyberSecurityChatbot.UI
@@ -21,11 +12,9 @@ namespace CyberSecurityChatbot.UI
     {
         private readonly Chatbot _bot;
         private readonly SecurityTools _tools;
-        private int _interactionCount = 0;
-        private readonly string _logFolder = "Logs";
+        private readonly QuizManager _quiz;
 
-        // Observable collection bound to the ListBox for modern UI
-        public ObservableCollection<MessageItem> Messages { get; } = new();
+        public ObservableCollection<MessageItem> ChatMessages { get; } = new ObservableCollection<MessageItem>();
 
         public MainWindow()
         {
@@ -33,168 +22,210 @@ namespace CyberSecurityChatbot.UI
 
             _bot = new Chatbot();
             _tools = new SecurityTools();
+            _quiz = new QuizManager(_bot.Logger);
 
-            DataContext = this;
+            ChatList.ItemsSource = ChatMessages;
 
-            TryPlayGreeting();
-            AddSystemMessage("Hello! Type a question or check a password. I remember interests and detect simple sentiment.");
+            AddSystemMessage("Systems Online. Please register your tracking identity profile inside the command terminal prompt lines below.");
+
+            RefreshTasksMatrix();
+            RenderQuizQuestionState();
         }
 
-        private void TryPlayGreeting()
+        private void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "welcome.wav");
-                if (File.Exists(path))
-                {
-                    using var player = new SoundPlayer(path);
-                    player.Play();
-                }
-            }
-            catch
-            {
-                AddSystemMessage("Voice greeting file not found.");
-            }
+            ProcessTerminalInput();
         }
 
-        private async void SendButton_Click(object sender, RoutedEventArgs e)
-        {
-            await SendInputAsync();
-        }
-
-        private async void InputBox_KeyDown(object sender, KeyEventArgs e)
+        private void InputBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
                 e.Handled = true;
-                await SendInputAsync();
+                ProcessTerminalInput();
             }
         }
 
-        private async Task SendInputAsync()
+        private void ProcessTerminalInput()
         {
-            var input = InputBox.Text?.Trim();
-            if (string.IsNullOrEmpty(input))
-                return;
+            string input = InputBox.Text?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(input)) return;
 
-            AddMessage("You", input);
-            _interactionCount++;
-            Log("User", input);
+            AddUserMessage(input);
             InputBox.Clear();
 
-            if (input.Equals("exit", StringComparison.OrdinalIgnoreCase))
-            {
-                AddSystemMessage($"You asked {_interactionCount} questions. Stay safe online!");
-                return;
-            }
-
-            // Show a typing indicator
-            var typing = new MessageItem { Sender = "Bot", Text = "Bot is typing...", Timestamp = DateTime.Now, IsTyping = true };
-            Messages.Add(typing);
-            ScrollToEnd();
-
-            // Small delay for realism
-            await Task.Delay(600);
-
-            // Get response and replace typing indicator with actual message
             string response = _bot.GetResponse(input);
+            AddBotMessage(response);
 
-            // replace typing entry
-            var index = Messages.IndexOf(typing);
-            if (index >= 0)
-            {
-                Messages[index] = new MessageItem { Sender = "Bot", Text = response, Timestamp = DateTime.Now };
-            }
-            else
-            {
-                AddMessage("Bot", response);
-            }
-
-            ScrollToEnd();
+            RefreshTasksMatrix();
+            InterceptNLPInterfaceTriggers();
         }
 
-        private void PhishSimButton_Click(object sender, RoutedEventArgs e)
+        private void InterceptNLPInterfaceTriggers()
         {
-            _ = SimulatePhishingAsync();
-        }
-
-        private async Task SimulatePhishingAsync()
-        {
-            AddMessage("You", "simulate phishing");
-            Log("User", "simulate phishing");
-
-            var typing = new MessageItem { Sender = "Bot", Text = "Running phishing simulation...", Timestamp = DateTime.Now, IsTyping = true };
-            Messages.Add(typing);
-            ScrollToEnd();
-
-            await Task.Delay(700);
-
-            string resp = _bot.GetResponse("simulate phishing");
-            var idx = Messages.IndexOf(typing);
-            if (idx >= 0)
-                Messages[idx] = new MessageItem { Sender = "Bot", Text = resp, Timestamp = DateTime.Now };
-            else
-                AddMessage("Bot", resp);
-
-            ScrollToEnd();
+            if (_bot.Logger.SenderUINLPQuizTrigger)
+            {
+                _bot.Logger.SenderUINLPQuizTrigger = false;
+                WorkspaceTabs.SelectedItem = QuizTab;
+            }
         }
 
         private void CheckPasswordButton_Click(object sender, RoutedEventArgs e)
         {
-            var pw = PasswordBox.Password ?? "";
-            var result = _tools.CheckPassword(pw);
-            StatusText.Text = $"Result: {result}";
-            AddSystemMessage($"Password checked: {result}");
-            Log("User", "Checked password");
+            string inputPw = PasswordBox.Password ?? string.Empty;
+            string evaluationResult = _tools.CheckPassword(inputPw);
+            StatusText.Text = $"Analysis: {evaluationResult}";
+            AddSystemMessage($"Entropy validation routine executed: {evaluationResult}");
         }
 
-        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        private void RefreshTasksMatrix()
         {
-            Messages.Clear();
-            AddSystemMessage("Chat cleared.");
+            DgTasks.ItemsSource = null;
+            DgTasks.ItemsSource = _bot.TaskEngine.GetAllTasks();
         }
 
-        private void AddSystemMessage(string text)
+        private void BtnAddTask_Click(object sender, RoutedEventArgs e)
         {
-            Messages.Add(new MessageItem { Sender = "System", Text = text, Timestamp = DateTime.Now });
-            ScrollToEnd();
+            string title = TxtTaskTitle.Text.Trim();
+            string desc = TxtTaskDescription.Text.Trim();
+            string reminder = TxtTaskReminder.Text.Trim();
+
+            if (string.IsNullOrEmpty(title))
+            {
+                MessageBox.Show("Task identification title parameters cannot be left completely blank.", "Validation Boundary Failure", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string coreReturnMessage = _bot.TaskEngine.AddTask(title, desc, reminder);
+            AddSystemMessage($"[Task Framework Notification]: {coreReturnMessage}");
+
+            TxtTaskTitle.Clear();
+            TxtTaskDescription.Clear();
+            TxtTaskReminder.Clear();
+
+            RefreshTasksMatrix();
         }
 
-        private void AddMessage(string sender, string text)
+        private void BtnMarkComplete_Click(object sender, RoutedEventArgs e)
         {
-            Messages.Add(new MessageItem { Sender = sender, Text = text, Timestamp = DateTime.Now });
-            ScrollToEnd();
+            if (DgTasks.SelectedItem is CyberTask selectedItem)
+            {
+                _bot.TaskEngine.MarkAsComplete(selectedItem.Id);
+                RefreshTasksMatrix();
+            }
         }
 
-        private void ScrollToEnd()
+        private void BtnDeleteTask_Click(object sender, RoutedEventArgs e)
         {
+            if (DgTasks.SelectedItem is CyberTask selectedItem)
+            {
+                _bot.TaskEngine.DeleteTask(selectedItem.Id);
+                RefreshTasksMatrix();
+            }
+        }
+
+        private void RenderQuizQuestionState()
+        {
+            QuizQuestion currentQuestion = _quiz.GetCurrentQuestion();
+            QuizScoreText.Text = $"Active Assessment Score Metric: {_quiz.GetScore()} / {_quiz.GetTotalQuestions()} Items Cleared";
+
+            if (currentQuestion == null)
+            {
+                QuestionText.Text = _quiz.GetFinalMessage();
+                OptionsPanel.Visibility = Visibility.Collapsed;
+                SubmitAnswerBtn.Visibility = Visibility.Collapsed;
+                NextQuestionBtn.Visibility = Visibility.Collapsed;
+                ResetQuizBtn.Visibility = Visibility.Visible;
+                return;
+            }
+
+            OptionsPanel.Visibility = Visibility.Visible;
+            SubmitAnswerBtn.Visibility = Visibility.Visible;
+            NextQuestionBtn.Visibility = Visibility.Collapsed;
+            ResetQuizBtn.Visibility = Visibility.Collapsed;
+            ExplanationText.Visibility = Visibility.Collapsed;
+
+            QuestionText.Text = currentQuestion.Question;
+
+            if (currentQuestion.IsTrueFalse)
+            {
+                OptA.Content = "True";
+                OptB.Content = "False";
+                OptC.Visibility = Visibility.Collapsed;
+                OptD.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                OptC.Visibility = Visibility.Visible;
+                OptD.Visibility = Visibility.Visible;
+                OptA.Content = currentQuestion.Options[0];
+                OptB.Content = currentQuestion.Options[1];
+                OptC.Content = currentQuestion.Options[2];
+                OptD.Content = currentQuestion.Options[3];
+            }
+
+            OptA.IsChecked = false;
+            OptB.IsChecked = false;
+            OptC.IsChecked = false;
+            OptD.IsChecked = false;
+        }
+
+        private void SubmitAnswerBtn_Click(object sender, RoutedEventArgs e)
+        {
+            QuizQuestion currentQuestion = _quiz.GetCurrentQuestion();
+            if (currentQuestion == null) return;
+
+            string selectedAnswerString = string.Empty;
+            if (OptA.IsChecked == true) selectedAnswerString = OptA.Content.ToString();
+            else if (OptB.IsChecked == true) selectedAnswerString = OptB.Content.ToString();
+            else if (OptC.IsChecked == true && !currentQuestion.IsTrueFalse) selectedAnswerString = OptC.Content.ToString();
+            else if (OptD.IsChecked == true && !currentQuestion.IsTrueFalse) selectedAnswerString = OptD.Content.ToString();
+
+            if (string.IsNullOrEmpty(selectedAnswerString))
+            {
+                MessageBox.Show("Please select an choice option node before committing answers.", "Missing Token Input", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            bool verificationOutcome = _quiz.SubmitAnswer(selectedAnswerString);
+            ExplanationText.Text = $"[(Verification Result: {(verificationOutcome ? "SUCCESS" : "FAIL")})]\n{currentQuestion.Explanation}";
+            ExplanationText.Visibility = Visibility.Visible;
+
+            SubmitAnswerBtn.Visibility = Visibility.Collapsed;
+            NextQuestionBtn.Visibility = Visibility.Visible;
+
+            QuizScoreText.Text = $"Active Assessment Score Metric: {_quiz.GetScore()} / {_quiz.GetTotalQuestions()} Items Cleared";
+        }
+
+        private void NextQuestionBtn_Click(object sender, RoutedEventArgs e)
+        {
+            RenderQuizQuestionState();
+        }
+
+        private void ResetQuizBtn_Click(object sender, RoutedEventArgs e)
+        {
+            _quiz.ResetQuiz();
+            RenderQuizQuestionState();
+        }
+
+        private void AddSystemMessage(string text) => AddMessageElement("System", text);
+        private void AddUserMessage(string text) => AddMessageElement("You", text);
+        private void AddBotMessage(string text) => AddMessageElement("Bot", text);
+
+        private void AddMessageElement(string sender, string msgText)
+        {
+            ChatMessages.Add(new MessageItem { TemplateSender = sender, Text = msgText, Timestamp = DateTime.Now.ToString("HH:mm:ss") });
             if (ChatList.Items.Count > 0)
             {
                 ChatList.ScrollIntoView(ChatList.Items[ChatList.Items.Count - 1]);
             }
         }
-
-        private void Log(string user, string action)
-        {
-            try
-            {
-                Directory.CreateDirectory(_logFolder);
-                File.AppendAllText(Path.Combine(_logFolder, "log.txt"),
-                    $"[{DateTime.Now}] {user}: {action}{Environment.NewLine}");
-            }
-            catch
-            {
-                // keep UI stable if logging fails
-            }
-        }
     }
 
-    // Simple message model used by the UI
     public class MessageItem
     {
-        public string Sender { get; set; } = "Bot"; // "You", "Bot", or "System"
-        public string Text { get; set; } = "";
-        public DateTime Timestamp { get; set; } = DateTime.Now;
-        public bool IsTyping { get; set; }
+        public string TemplateSender { get; set; }
+        public string Text { get; set; }
+        public string Timestamp { get; set; }
     }
 }
